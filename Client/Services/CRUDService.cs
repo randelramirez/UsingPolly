@@ -18,14 +18,21 @@ namespace Client.Services
     public class CRUDService : IService
     {
         private static HttpClient httpClient = new HttpClient();
-        readonly AsyncRetryPolicy<HttpResponseMessage> _httpRetryPolicy;
+
+        private readonly AsyncRetryPolicy<HttpResponseMessage> httpWaitAndRetry;
+        private readonly AsyncRetryPolicy<HttpResponseMessage> httpWaitAndRetryWithDelegate;
+        
         public CRUDService()
         {
             httpClient.BaseAddress = new Uri("https://localhost:44354/");
             httpClient.Timeout = new TimeSpan(0, 0, 30);
             httpClient.DefaultRequestHeaders.Clear();
 
-            _httpRetryPolicy =
+            httpWaitAndRetry = Policy.HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
+                    .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt) / 2)); 
+
+
+            httpWaitAndRetryWithDelegate =
                 Policy.HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
                     .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt) / 2), onRetry: (httpResponseMessage, retryCount) =>
                     {
@@ -36,7 +43,8 @@ namespace Client.Services
         public async Task Run()
         {
             //await GetContacts();
-            await GetContactsWithWaitAndRetry();
+            await GetContactWaitAndRetry();
+            //await GetContactWaitAndRetryWithDelegate();
             //await GetContactsThroughHttpRequestMessage();
             //await CreateContact();
             //await UpdateContact();
@@ -48,7 +56,7 @@ namespace Client.Services
         public async Task<ContactViewModel> GetContact(Guid contactId)
         {
 
-            var response = await _httpRetryPolicy.ExecuteAsync(() => httpClient.GetAsync($"api/contacts/{contactId}"));
+            var response = await httpWaitAndRetryWithDelegate.ExecuteAsync(() => httpClient.GetAsync($"api/contacts/{contactId}"));
             response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadAsStringAsync();
             ContactViewModel contact = default;
@@ -86,10 +94,41 @@ namespace Client.Services
             }
         }
 
-        public async Task GetContactsWithWaitAndRetry()
+        public async Task GetContactWaitAndRetry()
         {
             // api/contactsss is an invalid endpoint
-            var response = await _httpRetryPolicy.ExecuteAsync(() => httpClient.GetAsync("api/contactsss"));
+            var response = await httpWaitAndRetry.ExecuteAsync(() => GetData());
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+            var contacts = new List<ContactViewModel>();
+            if (response.Content.Headers.ContentType.MediaType == "application/json")
+            {
+                contacts = JsonConvert.DeserializeObject<List<ContactViewModel>>(content);
+            }
+            else if (response.Content.Headers.ContentType.MediaType == "application/xml")
+            {
+                var serializer = new XmlSerializer(typeof(List<ContactViewModel>));
+                contacts = (List<ContactViewModel>)serializer.Deserialize(new StringReader(content));
+            }
+
+            foreach (var contact in contacts)
+            {
+                Console.WriteLine($"Name: {contact.Name}, Address: {contact.Address}");
+            }
+
+            async Task<HttpResponseMessage> GetData()
+            {
+                // We creared a separare local method so we can breakpoint in this method to check for retries
+                return await httpClient.GetAsync("api/contactsss");
+            }
+        }
+
+
+
+        public async Task GetContactWaitAndRetryWithDelegate()
+        {
+            // api/contactsss is an invalid endpoint
+            var response = await httpWaitAndRetryWithDelegate.ExecuteAsync(() => httpClient.GetAsync("api/contactsss"));
             response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadAsStringAsync();
             var contacts = new List<ContactViewModel>();
