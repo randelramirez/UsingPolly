@@ -2,6 +2,8 @@
 using Core.ViewModels;
 using Microsoft.AspNetCore.JsonPatch;
 using Newtonsoft.Json;
+using Polly;
+using Polly.Retry;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,28 +18,37 @@ namespace Client.Services
     public class CRUDService : IService
     {
         private static HttpClient httpClient = new HttpClient();
-
+        readonly AsyncRetryPolicy<HttpResponseMessage> _httpRetryPolicy;
         public CRUDService()
         {
             httpClient.BaseAddress = new Uri("https://localhost:44354/");
             httpClient.Timeout = new TimeSpan(0, 0, 30);
             httpClient.DefaultRequestHeaders.Clear();
+
+            _httpRetryPolicy =
+                Policy.HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
+                    .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt) / 2), onRetry: (httpResponseMessage, retryCount) =>
+                    {
+                        Console.WriteLine($"Retrying...");
+                    });
         }
 
-        public async  Task Run()
+        public async Task Run()
         {
             //await GetContacts();
+            await GetContactsWithWaitAndRetry();
             //await GetContactsThroughHttpRequestMessage();
             //await CreateContact();
             //await UpdateContact();
             //await DeleteContact();
             //await PatchContactThroughHttpRequestMessage();
-            await PatchContact();
+            //await PatchContact();
         }
 
         public async Task<ContactViewModel> GetContact(Guid contactId)
         {
-            var response = await httpClient.GetAsync($"api/contacts/{contactId}");
+
+            var response = await _httpRetryPolicy.ExecuteAsync(() => httpClient.GetAsync($"api/contacts/{contactId}"));
             response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadAsStringAsync();
             ContactViewModel contact = default;
@@ -56,6 +67,29 @@ namespace Client.Services
         public async Task GetContacts()
         {
             var response = await httpClient.GetAsync("api/contacts");
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+            var contacts = new List<ContactViewModel>();
+            if (response.Content.Headers.ContentType.MediaType == "application/json")
+            {
+                contacts = JsonConvert.DeserializeObject<List<ContactViewModel>>(content);
+            }
+            else if (response.Content.Headers.ContentType.MediaType == "application/xml")
+            {
+                var serializer = new XmlSerializer(typeof(List<ContactViewModel>));
+                contacts = (List<ContactViewModel>)serializer.Deserialize(new StringReader(content));
+            }
+
+            foreach (var contact in contacts)
+            {
+                Console.WriteLine($"Name: {contact.Name}, Address: {contact.Address}");
+            }
+        }
+
+        public async Task GetContactsWithWaitAndRetry()
+        {
+            // api/contactsss is an invalid endpoint
+            var response = await _httpRetryPolicy.ExecuteAsync(() => httpClient.GetAsync("api/contactsss"));
             response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadAsStringAsync();
             var contacts = new List<ContactViewModel>();
@@ -126,9 +160,9 @@ namespace Client.Services
             // assign the id of the retrieved contact
             var contactToUpdate = new Contact()
             {
-               Id = contactToUpdateViewModel.Id,
-               Name = $"Updated contact name! {DateTimeOffset.UtcNow}",
-               Address = "Updated Address"
+                Id = contactToUpdateViewModel.Id,
+                Name = $"Updated contact name! {DateTimeOffset.UtcNow}",
+                Address = "Updated Address"
             };
 
             var serializedContactToUpdate = JsonConvert.SerializeObject(contactToUpdate);
