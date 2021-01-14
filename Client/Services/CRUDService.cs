@@ -43,33 +43,8 @@ namespace Client.Services
         public async Task Run()
         {
             //await GetContacts();
-            await GetContactWaitAndRetry();
+            //await GetContactWaitAndRetry();
             //await GetContactWaitAndRetryWithDelegate();
-            //await GetContactsThroughHttpRequestMessage();
-            //await CreateContact();
-            //await UpdateContact();
-            //await DeleteContact();
-            //await PatchContactThroughHttpRequestMessage();
-            //await PatchContact();
-        }
-
-        public async Task<ContactViewModel> GetContact(Guid contactId)
-        {
-
-            var response = await httpWaitAndRetryWithDelegate.ExecuteAsync(() => httpClient.GetAsync($"api/contacts/{contactId}"));
-            response.EnsureSuccessStatusCode();
-            var content = await response.Content.ReadAsStringAsync();
-            ContactViewModel contact = default;
-            if (response.Content.Headers.ContentType.MediaType == "application/json")
-            {
-                contact = JsonConvert.DeserializeObject<ContactViewModel>(content);
-            }
-            else if (response.Content.Headers.ContentType.MediaType == "application/xml")
-            {
-                var serializer = new XmlSerializer(typeof(List<ContactViewModel>));
-                contact = (ContactViewModel)serializer.Deserialize(new StringReader(content));
-            }
-            return contact;
         }
 
         public async Task GetContacts()
