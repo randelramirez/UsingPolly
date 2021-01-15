@@ -63,14 +63,45 @@ namespace Client.Services
         public async Task Run()
         {
             //await GetContactWaitAndRetry();
+            await GetContactWaitAndRetryWithHttpClientTimeout();
             //await GetContactWaitAndRetryWithDelegate();
-            await GetContactsWithFallbackPolicy();
+            //await GetContactsWithFallbackPolicy();
         }
 
         public async Task GetContactWaitAndRetry()
         {
             // api/contactsss is an invalid endpoint
             var response = await httpWaitAndRetry.ExecuteAsync(() => GetData());
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+            var contacts = new List<ContactViewModel>();
+
+            if (response.Content.Headers.ContentType.MediaType == "application/json")
+            {
+                contacts = JsonConvert.DeserializeObject<List<ContactViewModel>>(content);
+            }
+            else if (response.Content.Headers.ContentType.MediaType == "application/xml")
+            {
+                var serializer = new XmlSerializer(typeof(List<ContactViewModel>));
+                contacts = (List<ContactViewModel>)serializer.Deserialize(new StringReader(content));
+            }
+
+            foreach (var contact in contacts)
+            {
+                Console.WriteLine($"Name: {contact.Name}, Address: {contact.Address}");
+            }
+
+            static async Task<HttpResponseMessage> GetData()
+            {
+                // We creared a separare local method so we can breakpoint in this method to check for retries
+                return await httpClient.GetAsync("api/contactsss");
+            }
+        }
+
+        public async Task GetContactWaitAndRetryWithHttpClientTimeout()
+        {
+            // api/contactsss is an invalid endpoint
+            var response = await httpretryPolicyForHttpClienTimeout.ExecuteAsync(() => GetData());
             response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadAsStringAsync();
             var contacts = new List<ContactViewModel>();
@@ -123,7 +154,6 @@ namespace Client.Services
         public async Task GetContactsWithFallbackPolicy()
         {
             // api/contactsss is an invalid endpoint
-
             //var response = await httpFallbackPolicy.ExecuteAsync(() => httpWaitAndRetryWithDelegate.ExecuteAsync(() => GetData()));
 
             // using WrapAsync
