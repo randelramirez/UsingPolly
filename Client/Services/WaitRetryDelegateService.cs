@@ -14,7 +14,7 @@ using System.Xml.Serialization;
 
 namespace Client.Services
 {
-    public class CRUDService : IService
+    public class WaitRetryDelegateService : IService
     {
         private static HttpClient httpClient = new HttpClient();
 
@@ -22,7 +22,7 @@ namespace Client.Services
         private readonly AsyncRetryPolicy<HttpResponseMessage> httpWaitAndRetryWithDelegate;
         private readonly AsyncFallbackPolicy<HttpResponseMessage> httpFallbackPolicy;
         
-        public CRUDService()
+        public WaitRetryDelegateService()
         {
             httpClient.BaseAddress = new Uri("https://localhost:44354/");
             httpClient.Timeout = new TimeSpan(0, 0, 30);

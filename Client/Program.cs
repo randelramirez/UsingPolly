@@ -47,7 +47,7 @@ namespace Client
             // scoped lifetime
 
             // For the CRUD demos
-            serviceCollection.AddScoped<IService, CRUDService>();
+            serviceCollection.AddScoped<IService, WaitRetryDelegateService>();
 
             // For stream demos
             //serviceCollection.AddScoped<IService, StreamService>();
