@@ -6,6 +6,7 @@ using Polly.Retry;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
@@ -42,8 +43,8 @@ namespace Client.Services
                         Console.WriteLine($"Retrying...");
                   });
 
-            httpFallbackPolicy = Policy.HandleResult<HttpResponseMessage>(r => r.StatusCode == System.Net.HttpStatusCode.NotFound)
-                .FallbackAsync(new HttpResponseMessage(System.Net.HttpStatusCode.OK) { });
+            httpFallbackPolicy = Policy.HandleResult<HttpResponseMessage>(r => r.StatusCode == HttpStatusCode.NotFound)
+                .FallbackAsync(new HttpResponseMessage(HttpStatusCode.OK) { });
         }
 
         static void OnRetry(DelegateResult<HttpResponseMessage> delegateResult, int retryCount)
