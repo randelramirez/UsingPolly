@@ -3,6 +3,7 @@ using Core.ViewModels;
 using Microsoft.AspNetCore.JsonPatch;
 using Newtonsoft.Json;
 using Polly;
+using Polly.Fallback;
 using Polly.Retry;
 using System;
 using System.Collections.Generic;
@@ -21,6 +22,7 @@ namespace Client.Services
 
         private readonly AsyncRetryPolicy<HttpResponseMessage> httpWaitAndRetry;
         private readonly AsyncRetryPolicy<HttpResponseMessage> httpWaitAndRetryWithDelegate;
+        private readonly AsyncFallbackPolicy<HttpResponseMessage> httpFallbackPolicy;
         
         public CRUDService()
         {
@@ -28,9 +30,12 @@ namespace Client.Services
             httpClient.Timeout = new TimeSpan(0, 0, 30);
             httpClient.DefaultRequestHeaders.Clear();
 
+
+            httpFallbackPolicy = Policy.HandleResult<HttpResponseMessage>(r => r.StatusCode == System.Net.HttpStatusCode.NotFound)
+                .FallbackAsync(new HttpResponseMessage(System.Net.HttpStatusCode.OK) { });
+
             httpWaitAndRetry = Policy.HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
                     .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt) / 2)); 
-
 
             httpWaitAndRetryWithDelegate =
                 Policy.HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
@@ -45,6 +50,7 @@ namespace Client.Services
             //await GetContacts();
             //await GetContactWaitAndRetry();
             //await GetContactWaitAndRetryWithDelegate();
+            await GetContactsWithFallbackPolicy();
         }
 
         public async Task GetContacts()
@@ -66,6 +72,35 @@ namespace Client.Services
             foreach (var contact in contacts)
             {
                 Console.WriteLine($"Name: {contact.Name}, Address: {contact.Address}");
+            }
+        }
+
+        public async Task GetContactsWithFallbackPolicy()
+        {
+            // api/contactsss is an invalid endpoint
+            var response = await httpFallbackPolicy.ExecuteAsync(() => httpWaitAndRetryWithDelegate.ExecuteAsync(() => GetData()));
+            response.EnsureSuccessStatusCode();
+            var content = await response.Content.ReadAsStringAsync();
+            var contacts = new List<ContactViewModel>();
+            if (response.Content.Headers.ContentType.MediaType == "application/json")
+            {
+                contacts = JsonConvert.DeserializeObject<List<ContactViewModel>>(content);
+            }
+            else if (response.Content.Headers.ContentType.MediaType == "application/xml")
+            {
+                var serializer = new XmlSerializer(typeof(List<ContactViewModel>));
+                contacts = (List<ContactViewModel>)serializer.Deserialize(new StringReader(content));
+            }
+
+            foreach (var contact in contacts)
+            {
+                Console.WriteLine($"Name: {contact.Name}, Address: {contact.Address}");
+            }
+
+            static async Task<HttpResponseMessage> GetData()
+            {
+                // We creared a separare local method so we can breakpoint in this method to check for retries
+                return await httpClient.GetAsync("api/contactsss");
             }
         }
 
@@ -91,7 +126,7 @@ namespace Client.Services
                 Console.WriteLine($"Name: {contact.Name}, Address: {contact.Address}");
             }
 
-            async Task<HttpResponseMessage> GetData()
+            static async Task<HttpResponseMessage> GetData()
             {
                 // We creared a separare local method so we can breakpoint in this method to check for retries
                 return await httpClient.GetAsync("api/contactsss");
@@ -165,38 +200,38 @@ namespace Client.Services
             return createdContact;
         }
 
-        public async Task UpdateContact()
-        {
-            // create a new contact and then update it
-            var contactToUpdateViewModel = await CreateContact();
-            Console.WriteLine($"Name before update: {contactToUpdateViewModel.Name}, Address: {contactToUpdateViewModel.Address}");
+        //public async Task UpdateContact()
+        //{
+        //    // create a new contact and then update it
+        //    var contactToUpdateViewModel = await CreateContact();
+        //    Console.WriteLine($"Name before update: {contactToUpdateViewModel.Name}, Address: {contactToUpdateViewModel.Address}");
 
-            // assign the id of the retrieved contact
-            var contactToUpdate = new Contact()
-            {
-                Id = contactToUpdateViewModel.Id,
-                Name = $"Updated contact name! {DateTimeOffset.UtcNow}",
-                Address = "Updated Address"
-            };
+        //    // assign the id of the retrieved contact
+        //    var contactToUpdate = new Contact()
+        //    {
+        //        Id = contactToUpdateViewModel.Id,
+        //        Name = $"Updated contact name! {DateTimeOffset.UtcNow}",
+        //        Address = "Updated Address"
+        //    };
 
-            var serializedContactToUpdate = JsonConvert.SerializeObject(contactToUpdate);
+        //    var serializedContactToUpdate = JsonConvert.SerializeObject(contactToUpdate);
 
-            var request = new HttpRequestMessage(HttpMethod.Put,
-                $"api/contacts/{contactToUpdate.Id}");
-            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            request.Content = new StringContent(serializedContactToUpdate);
-            request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+        //    var request = new HttpRequestMessage(HttpMethod.Put,
+        //        $"api/contacts/{contactToUpdate.Id}");
+        //    request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        //    request.Content = new StringContent(serializedContactToUpdate);
+        //    request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
 
-            var response = await httpClient.SendAsync(request);
-            response.EnsureSuccessStatusCode();
+        //    var response = await httpClient.SendAsync(request);
+        //    response.EnsureSuccessStatusCode();
 
-            Console.WriteLine($"StatusCode: {(int)response.StatusCode} {response.StatusCode}");
-            var content = await response.Content.ReadAsStringAsync();
-            //Console.WriteLine(content); content is empty 
+        //    Console.WriteLine($"StatusCode: {(int)response.StatusCode} {response.StatusCode}");
+        //    var content = await response.Content.ReadAsStringAsync();
+        //    //Console.WriteLine(content); content is empty 
 
-            var updatedContact = await GetContact(contactToUpdateViewModel.Id);
-            Console.WriteLine($"Name after update: {updatedContact.Name}, Address after update: {updatedContact.Address}");
-        }
+        //    var updatedContact = await GetContact(contactToUpdateViewModel.Id);
+        //    Console.WriteLine($"Name after update: {updatedContact.Name}, Address after update: {updatedContact.Address}");
+        //}
 
         private async Task DeleteContact()
         {
@@ -217,55 +252,55 @@ namespace Client.Services
             //Console.WriteLine(content); content is empty 
         }
 
-        public async Task PatchContactThroughHttpRequestMessage()
-        {
-            // create a contact and then update it
-            var contact = await CreateContact();
+        //public async Task PatchContactThroughHttpRequestMessage()
+        //{
+        //    // create a contact and then update it
+        //    var contact = await CreateContact();
 
-            var patchDoc = new JsonPatchDocument<Contact>();
+        //    var patchDoc = new JsonPatchDocument<Contact>();
 
-            patchDoc.Replace(c => c.Name, "Updated Name with Patch");
-            patchDoc.Remove(c => c.Address);
+        //    patchDoc.Replace(c => c.Name, "Updated Name with Patch");
+        //    patchDoc.Remove(c => c.Address);
 
-            var serializedChangeSet = JsonConvert.SerializeObject(patchDoc);
+        //    var serializedChangeSet = JsonConvert.SerializeObject(patchDoc);
 
-            var request = new HttpRequestMessage(HttpMethod.Patch,
-                $"api/contacts/{contact.Id}");
-            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            request.Content = new StringContent(serializedChangeSet);
-            request.Content.Headers.ContentType =
-                new MediaTypeHeaderValue("application/json-patch+json");
+        //    var request = new HttpRequestMessage(HttpMethod.Patch,
+        //        $"api/contacts/{contact.Id}");
+        //    request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        //    request.Content = new StringContent(serializedChangeSet);
+        //    request.Content.Headers.ContentType =
+        //        new MediaTypeHeaderValue("application/json-patch+json");
 
-            var response = await httpClient.SendAsync(request);
-            response.EnsureSuccessStatusCode();
+        //    var response = await httpClient.SendAsync(request);
+        //    response.EnsureSuccessStatusCode();
 
-            Console.WriteLine($"StatusCode: {(int)response.StatusCode} {response.StatusCode}");
-            var patchedContact = await GetContact(contact.Id);
-            Console.WriteLine($"Name after patch: {patchedContact.Name}, Address after patch: {patchedContact.Address}");
-        }
+        //    Console.WriteLine($"StatusCode: {(int)response.StatusCode} {response.StatusCode}");
+        //    var patchedContact = await GetContact(contact.Id);
+        //    Console.WriteLine($"Name after patch: {patchedContact.Name}, Address after patch: {patchedContact.Address}");
+        //}
 
-        public async Task PatchContact()
-        {
-            // create a contact and then update it
-            var contact = await CreateContact();
+        //public async Task PatchContact()
+        //{
+        //    // create a contact and then update it
+        //    var contact = await CreateContact();
 
-            var patchDoc = new JsonPatchDocument<Contact>();
-            patchDoc.Replace(c => c.Name, "Updated Name");
-            patchDoc.Remove(c => c.Address);
+        //    var patchDoc = new JsonPatchDocument<Contact>();
+        //    patchDoc.Replace(c => c.Name, "Updated Name");
+        //    patchDoc.Remove(c => c.Address);
 
-            var response = await httpClient.PatchAsync(
-               $"api/contacts/{contact.Id}",
-               new StringContent(
-                   JsonConvert.SerializeObject(patchDoc),
-                  Encoding.UTF8,
-                   "application/json-patch+json"));
+        //    var response = await httpClient.PatchAsync(
+        //       $"api/contacts/{contact.Id}",
+        //       new StringContent(
+        //           JsonConvert.SerializeObject(patchDoc),
+        //          Encoding.UTF8,
+        //           "application/json-patch+json"));
 
-            response.EnsureSuccessStatusCode();
-            //var content = await response.Content.ReadAsStringAsync(); // content is emptu, we are returning 204
+        //    response.EnsureSuccessStatusCode();
+        //    //var content = await response.Content.ReadAsStringAsync(); // content is emptu, we are returning 204
 
-            Console.WriteLine($"StatusCode: {(int)response.StatusCode} {response.StatusCode}");
-            var patchedContact = await GetContact(contact.Id);
-            Console.WriteLine($"Name after patch: {patchedContact.Name}, Address after patch: {patchedContact.Address}");
-        }
+        //    Console.WriteLine($"StatusCode: {(int)response.StatusCode} {response.StatusCode}");
+        //    var patchedContact = await GetContact(contact.Id);
+        //    Console.WriteLine($"Name after patch: {patchedContact.Name}, Address after patch: {patchedContact.Address}");
+        //}
     }
 }
