@@ -45,8 +45,8 @@ namespace Client
             });
 
             serviceCollection.AddSingleton<PolicyHolder>();
-            //serviceCollection.AddScoped<IService, WaitRetryDelegateService>();
-            serviceCollection.AddScoped<IService, PolicyHolderFromDIService>();
+            serviceCollection.AddScoped<IService, WaitRetryDelegateTimeoutService>();
+            //serviceCollection.AddScoped<IService, PolicyHolderFromDIService>();
 
         }
     }

@@ -52,8 +52,8 @@ namespace Client.Services
             if (delegateResult.Exception is HttpRequestException)
             {
                 // We check if the exception is a timeout exception
-                // Note that timeout is not thrown as a TimeoutException but as TaskCanceledException
-                if (delegateResult.Exception.GetBaseException().Message == "The operation timed out")
+                if (delegateResult.Exception.GetBaseException()
+                    .Message.Contains("A connection attempt failed because the connected party did not properly respond after a period of time"))
                 {
                     // log something about the timeout  
                     Console.WriteLine("The request timedout, logging...");
@@ -125,7 +125,7 @@ namespace Client.Services
             static async Task<HttpResponseMessage> GetData()
             {
                 // We creared a separare local method so we can breakpoint in this method to check for retries
-                return await httpClient.GetAsync("api/contactsss");
+                return await httpClient.GetAsync("http://10.255.255.1/someUnreachableEndpoint/");
             }
         }
 
