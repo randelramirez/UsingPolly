@@ -39,6 +39,7 @@ namespace Client.Services
                 Policy.HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
                     .WaitAndRetryAsync(3, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt) / 2), onRetry: (httpResponseMessage, retryCount) =>
                     {
+                        // Log
                         Console.WriteLine($"Retrying...");
                     });
         }
