@@ -6,6 +6,7 @@ using Client.Services;
 using Client.TypedClients;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Polly.Registry;
 
 namespace Client
 {
@@ -45,8 +46,10 @@ namespace Client
             });
 
             serviceCollection.AddSingleton<PolicyHolder>();
-            serviceCollection.AddScoped<IService, WaitRetryDelegateTimeoutService>();
+            serviceCollection.AddSingleton<PolicyRegistry>(PolicyRegistryFactory.GetRegistry());
+            //serviceCollection.AddScoped<IService, WaitRetryDelegateTimeoutService>();
             //serviceCollection.AddScoped<IService, PolicyHolderFromDIService>();
+            serviceCollection.AddScoped<IService, UsingPolicyRegistryService>();
 
         }
     }
