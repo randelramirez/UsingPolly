@@ -78,24 +78,16 @@ namespace Client.Services
         public async Task GetContactsWithFallbackPolicy()
         {
             // api/contactsss is an invalid endpoint
-            var response = await httpFallbackPolicy.ExecuteAsync(() => httpWaitAndRetryWithDelegate.ExecuteAsync(() => GetData()));
-            response.EnsureSuccessStatusCode();
-            var content = await response.Content.ReadAsStringAsync();
-            var contacts = new List<ContactViewModel>();
-            if (response.Content.Headers.ContentType.MediaType == "application/json")
-            {
-                contacts = JsonConvert.DeserializeObject<List<ContactViewModel>>(content);
-            }
-            else if (response.Content.Headers.ContentType.MediaType == "application/xml")
-            {
-                var serializer = new XmlSerializer(typeof(List<ContactViewModel>));
-                contacts = (List<ContactViewModel>)serializer.Deserialize(new StringReader(content));
-            }
 
-            foreach (var contact in contacts)
-            {
-                Console.WriteLine($"Name: {contact.Name}, Address: {contact.Address}");
-            }
+            //var response = await httpFallbackPolicy.ExecuteAsync(() => httpWaitAndRetryWithDelegate.ExecuteAsync(() => GetData()));
+
+            // using WrapAsync
+            var response = await Policy.WrapAsync(httpFallbackPolicy, httpWaitAndRetryWithDelegate).ExecuteAsync(() => GetData());
+
+            // we will still get a 200 despite calling  a non-existing endpoint 
+            response.EnsureSuccessStatusCode();
+
+            Console.WriteLine($"Status code:{(int)response.StatusCode}, {response.ReasonPhrase}");
 
             static async Task<HttpResponseMessage> GetData()
             {
