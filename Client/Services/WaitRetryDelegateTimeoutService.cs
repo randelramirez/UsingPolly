@@ -45,7 +45,8 @@ namespace Client.Services
               .WaitAndRetryAsync(3, retryAttempt =>
                   TimeSpan.FromSeconds(Math.Pow(2, retryAttempt) / 2), onRetry: (httpResponseMessage, retryCount) =>
                   {
-                        // Log
+                      // Log
+                      Console.WriteLine(httpResponseMessage.Result.StatusCode);
                         Console.WriteLine($"Retrying...");
                   });
 
@@ -69,11 +70,12 @@ namespace Client.Services
 
         public async Task Run()
         {
-            await TimeoutPolicy();
+            //await TimeoutPolicy();
             //await WaitAndRetry();
             //await WaitAndRetryWithHttpClientTimeout();
             //await WaitAndRetryWithDelegate();
             //await WithFallbackPolicy();
+            await WrappingFallbackRetryAndTimeoutPolicy();
         }
 
         public async Task TimeoutPolicy()
@@ -196,6 +198,25 @@ namespace Client.Services
 
             // using WrapAsync
             var response = await Policy.WrapAsync(httpFallbackPolicy, httpWaitAndRetryWithDelegate).ExecuteAsync(() => GetData());
+
+            // we will still get a 200 despite calling  a non-existing endpoint 
+            response.EnsureSuccessStatusCode();
+
+            Console.WriteLine($"Status code:{(int)response.StatusCode}, {response.ReasonPhrase}");
+
+            static async Task<HttpResponseMessage> GetData()
+            {
+                // We creared a separare local method so we can breakpoint in this method to check for retries
+                return await httpClient.GetAsync("api/contactsss");
+            }
+        }
+
+        public async Task WrappingFallbackRetryAndTimeoutPolicy()
+        {
+            // api/contactsss is an invalid endpoint
+            // using WrapAsync
+            var response = await Policy.WrapAsync(httpFallbackPolicy, httpWaitAndRetryWithDelegate, timeoutPolicy)
+                .ExecuteAsync(() => GetData()); // this will return 200, because the original response was 404 and we have a fallback policy
 
             // we will still get a 200 despite calling  a non-existing endpoint 
             response.EnsureSuccessStatusCode();
