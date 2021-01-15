@@ -17,7 +17,7 @@ namespace Client.Services
 
         public async Task Run()
         {
-            await GetContactWaitAndRetry();
+            await WaitAndRetry();
         }
 
         public PolicyHolderFromDIService(PolicyHolder policyHolder)
@@ -29,7 +29,7 @@ namespace Client.Services
             this.policyHolder = policyHolder;
         }
 
-        public async Task GetContactWaitAndRetry()
+        public async Task WaitAndRetry()
         {
             // api/contactsss is an invalid endpoint
             var response = await policyHolder.HttpRetryPolicy.ExecuteAsync(() => GetData());
