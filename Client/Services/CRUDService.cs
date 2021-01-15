@@ -133,8 +133,6 @@ namespace Client.Services
             }
         }
 
-
-
         public async Task GetContactWaitAndRetryWithDelegate()
         {
             // api/contactsss is an invalid endpoint
