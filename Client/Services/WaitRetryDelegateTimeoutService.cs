@@ -1,5 +1,4 @@
-﻿using Core;
-using Core.ViewModels;
+﻿using Core.ViewModels;
 using Newtonsoft.Json;
 using Polly;
 using Polly.Fallback;
@@ -8,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
@@ -46,7 +44,6 @@ namespace Client.Services
 
             httpFallbackPolicy = Policy.HandleResult<HttpResponseMessage>(r => r.StatusCode == System.Net.HttpStatusCode.NotFound)
                 .FallbackAsync(new HttpResponseMessage(System.Net.HttpStatusCode.OK) { });
-
         }
 
         static void OnRetry(DelegateResult<HttpResponseMessage> delegateResult, int retryCount)
