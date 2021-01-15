@@ -63,13 +63,13 @@ namespace Client.Services
 
         public async Task Run()
         {
-            //await GetContactWaitAndRetry();
-            await GetContactWaitAndRetryWithHttpClientTimeout();
-            //await GetContactWaitAndRetryWithDelegate();
-            //await GetContactsWithFallbackPolicy();
+            //await WaitAndRetry();
+            await WaitAndRetryWithHttpClientTimeout();
+            //await WaitAndRetryWithDelegate();
+            //await WithFallbackPolicy();
         }
 
-        public async Task GetContactWaitAndRetry()
+        public async Task WaitAndRetry()
         {
             // api/contactsss is an invalid endpoint
             var response = await httpWaitAndRetry.ExecuteAsync(() => GetData());
@@ -99,7 +99,7 @@ namespace Client.Services
             }
         }
 
-        public async Task GetContactWaitAndRetryWithHttpClientTimeout()
+        public async Task WaitAndRetryWithHttpClientTimeout()
         {
             // api/contactsss is an invalid endpoint
             var response = await httpretryPolicyForHttpClienTimeout.ExecuteAsync(() => GetData());
@@ -129,7 +129,7 @@ namespace Client.Services
             }
         }
 
-        public async Task GetContactWaitAndRetryWithDelegate()
+        public async Task WaitAndRetryWithDelegate()
         {
             // api/contactsss is an invalid endpoint
             var response = await httpWaitAndRetryWithDelegate.ExecuteAsync(() => httpClient.GetAsync("api/contactsss"));
@@ -152,7 +152,7 @@ namespace Client.Services
             }
         }
 
-        public async Task GetContactsWithFallbackPolicy()
+        public async Task WithFallbackPolicy()
         {
             // api/contactsss is an invalid endpoint
             //var response = await httpFallbackPolicy.ExecuteAsync(() => httpWaitAndRetryWithDelegate.ExecuteAsync(() => GetData()));
