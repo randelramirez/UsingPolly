@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Net.Http;
 using System.Threading.Tasks;
-using Client.MessageHandlers;
 using Client.Services;
-using Client.TypedClients;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Polly.Registry;
@@ -50,7 +47,6 @@ namespace Client
             //serviceCollection.AddScoped<IService, WaitRetryDelegateTimeoutService>();
             //serviceCollection.AddScoped<IService, PolicyHolderFromDIService>();
             serviceCollection.AddScoped<IService, UsingPolicyRegistryService>();
-
         }
     }
 }
