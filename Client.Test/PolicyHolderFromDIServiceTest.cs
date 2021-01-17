@@ -1,4 +1,5 @@
 ﻿using Client.Services;
+using Core.ViewModels;
 using Moq;
 using Moq.Protected;
 using Polly;
@@ -7,6 +8,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,21 +19,17 @@ namespace Client.Test
     public class PolicyHolderFromDIServiceTest
     {
         [Fact]
-        public async Task GetContactsAsStream_On401Response_MustThrowUnauthorizedApiAccessException()
+        public async Task CallInavlidApiEndpoint_ThrowsHttpRequestException_MessageMustHave404()
         {
-            //bool fakeInventoryResponse = true;
+            // ARRANGE
             Mock<HttpMessageHandler> httpMessageHandler = new Mock<HttpMessageHandler>();
             httpMessageHandler.Protected()
                 .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(),
-                    ItExpr.IsAny<CancellationToken>()).Throws(new HttpRequestException("Response status code does not indicate success: 404 (Not Found)."));
-                //.Returns(Task.FromResult(new HttpResponseMessage
-                //{
-                //    StatusCode = HttpStatusCode.OK,
-                //    Content = new StringContent(fakeInventoryResponse.ToString(), Encoding.UTF8, "application/json"),
-                //}));
+                    ItExpr.IsAny<CancellationToken>())
+                    .Throws(new HttpRequestException("Response status code does not indicate success: 404 (Not Found)."));
 
             HttpClient httpClient = new HttpClient(httpMessageHandler.Object);
-            httpClient.BaseAddress = new Uri(@"http://some.invalidurl.com/v1/");
+            httpClient.BaseAddress = new Uri(@"http://api/invalid/");
             httpClient.DefaultRequestHeaders.Accept.Clear();
             httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
@@ -42,21 +40,32 @@ namespace Client.Test
 
             var service = new PolicyHolderFromDIService(mockPolicyHolder.Object, httpClient);
 
+            // ACT
             var exception = await Record.ExceptionAsync(() => service.WaitAndRetry());
-           //var exception = await Assert.ThrowsAsync<HttpRequestException>(
-           //      () => service.WaitAndRetry());
 
+            // ASSERT
             Assert.Contains("404", exception.Message);
-
-
-            //Assert.True(service.WaitAndRetry());
 
         }
 
         [Fact]
-        public async Task GetContactsAsStream_On401Response_MustThrowUnauthorizedApiAccessException1()
+        public async Task CallValidApiEndpoint_DoesNotThrowException()
         {
-            bool fakeInventoryResponse = true;
+            // ARRANGE
+            var data = new List<ContactViewModel>();
+            data.Add(new ContactViewModel()
+            {
+                Id = Guid.NewGuid(),
+                Name = "Test",
+                Address = "Test"
+            });
+            data.Add(new ContactViewModel()
+            {
+                Id = Guid.NewGuid(),
+                Name = "Test",
+                Address = "Test"
+            });
+
             Mock<HttpMessageHandler> httpMessageHandler = new Mock<HttpMessageHandler>();
             httpMessageHandler.Protected()
                 .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(),
@@ -64,11 +73,11 @@ namespace Client.Test
             .Returns(Task.FromResult(new HttpResponseMessage
              {
                  StatusCode = HttpStatusCode.OK,
-                 Content = new StringContent(fakeInventoryResponse.ToString(), Encoding.UTF8, "application/json"),
-             }));
+                 Content = JsonContent.Create(data)
+            }));
 
             HttpClient httpClient = new HttpClient(httpMessageHandler.Object);
-            httpClient.BaseAddress = new Uri(@"http://some.invalidurl.com/v1/");
+            httpClient.BaseAddress = new Uri(@"http://api/valid/");
             httpClient.DefaultRequestHeaders.Accept.Clear();
             httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
@@ -79,13 +88,11 @@ namespace Client.Test
 
             var service = new PolicyHolderFromDIService(mockPolicyHolder.Object, httpClient);
 
+            // ACT
             var exception = await Record.ExceptionAsync(() => service.WaitAndRetry());
-
-            Assert.Null(exception);
-
             
-            //Assert.True(service.WaitAndRetry());
-
+            // ASSERT
+            Assert.Null(exception);
         }
     }
 }
