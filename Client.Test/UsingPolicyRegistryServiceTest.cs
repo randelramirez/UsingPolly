@@ -10,7 +10,6 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -62,9 +61,7 @@ namespace Client.Test
 
             // ASSERT
             Assert.Contains("404", exception.Message);
-
         }
-
 
         [Fact]
         public async Task GetTest()
