@@ -1,17 +1,14 @@
 ﻿using Polly;
-using Polly.Retry;
 using System;
-using System.Collections.Generic;
 using System.Net.Http;
-using System.Text;
 
 namespace Client
 {
-    public class PolicyHolder
+    public class PolicyHolder : IPolicyHolder
     {
-        public AsyncRetryPolicy<HttpResponseMessage> HttpRetryPolicy { get; }
+        public IAsyncPolicy<HttpResponseMessage> HttpRetryPolicy { get; set; }
 
-        public AsyncRetryPolicy HttpClientTimeoutException { get; }
+        public IAsyncPolicy HttpClientTimeoutException { get; set; }
 
         public PolicyHolder()
         {
