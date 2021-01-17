@@ -1,6 +1,7 @@
 ﻿using Client.Test.HandlersStub;
 using Moq;
 using Moq.Protected;
+using Polly;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -16,11 +17,14 @@ namespace Client.Test
         [Fact]
         public void GetContactsAsStream_On401Response_MustThrowUnauthorizedApiAccessException()
         {
+            // ARRANGE
+            IAsyncPolicy<HttpResponseMessage> mockPolicy = Policy.NoOpAsync<HttpResponseMessage>();
             var httpClient = new HttpClient(new Return401UnauthorizedResponseHandler());
-            var testableClass = new SampleService(httpClient);
+            var testableClass = new SampleService(mockPolicy, httpClient);
 
             //var cancellationTokenSource = new CancellationTokenSource();
 
+            // ACT, ASSERT(GetContactsAsStream())
             Assert.ThrowsAsync<UnauthorizedApiAccessException>(
                 () => testableClass.GetContactsAsStream());
         }
@@ -28,6 +32,7 @@ namespace Client.Test
         [Fact]
         public void GetContactsAsStream_On401Response_MustThrowUnauthorizedApiAccessException_WithMoq()
         {
+            // ARRANGE
             var unauthorizedResponseHttpMessageHandlerMock = new Mock<HttpMessageHandler>();
             // so we can setup a protected method named SendAsync inside HttpMessageHandler
             unauthorizedResponseHttpMessageHandlerMock.Protected()
@@ -39,9 +44,12 @@ namespace Client.Test
                {
                    StatusCode = HttpStatusCode.Unauthorized
                });
-            var httpClient = new HttpClient(unauthorizedResponseHttpMessageHandlerMock.Object);
-            var testableClass = new SampleService(httpClient);
 
+            IAsyncPolicy<HttpResponseMessage> mockPolicy = Policy.NoOpAsync<HttpResponseMessage>();
+            var httpClient = new HttpClient(unauthorizedResponseHttpMessageHandlerMock.Object);
+            var testableClass = new SampleService(mockPolicy, httpClient);
+
+            // ACT, ASSERT(GetContactsAsStream())
             Assert.ThrowsAsync<UnauthorizedApiAccessException>(() 
                 => testableClass.GetContactsAsStream());
         }
@@ -49,11 +57,16 @@ namespace Client.Test
         [Fact]
         public async Task GetContactsAsStream_On200Response_ReturnsCorrectNumberOfContacts()
         {
+            // ARRANGE
+            IAsyncPolicy<HttpResponseMessage> mockPolicy = Policy.NoOpAsync<HttpResponseMessage>();
             var httpClient = new HttpClient(new Return200OkResponseHandler());
-            var testableClass = new SampleService(httpClient);
+            var testableClass = new SampleService(mockPolicy, httpClient);
 
+            // ACT
             //var cancellationTokenSource = new CancellationTokenSource();
             var data = await testableClass.GetContactsAsStream();
+
+            // ASSERT
             Assert.Equal(2, data.Count());
         }
     }

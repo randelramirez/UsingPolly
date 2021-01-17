@@ -1,5 +1,6 @@
 ﻿using Core.ViewModels;
 using Newtonsoft.Json;
+using Polly;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,12 +10,15 @@ using System.Threading.Tasks;
 
 namespace Client
 {
+    // A service created for Demo of Unit Testing
     public class SampleService
     {
+        private readonly IAsyncPolicy<HttpResponseMessage> httpRetryPolicy;
         private readonly HttpClient httpClient;
 
-        public SampleService(HttpClient httpClient)
+        public SampleService(IAsyncPolicy<HttpResponseMessage> httpRetryPolicy, HttpClient httpClient)
         {
+            this.httpRetryPolicy = httpRetryPolicy;
             this.httpClient = httpClient;
             this.httpClient.BaseAddress = new Uri("https://localhost:44354/");
         }
@@ -26,7 +30,7 @@ namespace Client
               "api/contacts/");
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-            using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+            using var response = await this.httpRetryPolicy.ExecuteAsync(() => httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead));
             if (!response.IsSuccessStatusCode)
             {
                 // inspect the status code
