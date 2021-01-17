@@ -20,8 +20,9 @@ namespace Client.Services
             await WaitAndRetry();
         }
 
-        public PolicyHolderFromDIService(IPolicyHolder policyHolder)
+        public PolicyHolderFromDIService(IPolicyHolder policyHolder, HttpClient client)
         {
+            httpClient = client;
             httpClient.BaseAddress = new Uri("https://localhost:44354/");
             httpClient.Timeout = new TimeSpan(0, 0, 30);
             httpClient.DefaultRequestHeaders.Clear();

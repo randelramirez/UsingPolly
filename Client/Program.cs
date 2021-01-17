@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Client.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -42,6 +43,9 @@ namespace Client
                 builder.AddDebug();
             });
 
+            // simple way to inject HttpClient, only suitable for demo application like this(for Production apps use HttpClientFactory)
+            serviceCollection.AddSingleton<HttpClient>(new HttpClient());
+            
             serviceCollection.AddSingleton<IPolicyHolder>(new PolicyHolder());
             serviceCollection.AddSingleton<PolicyRegistry>(PolicyRegistryFactory.GetRegistry());
             //serviceCollection.AddScoped<IService, WaitRetryDelegateTimeoutService>();
