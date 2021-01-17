@@ -42,7 +42,7 @@ namespace Client
                 builder.AddDebug();
             });
 
-            serviceCollection.AddSingleton<PolicyHolder>();
+            serviceCollection.AddSingleton<IPolicyHolder>(new PolicyHolder());
             serviceCollection.AddSingleton<PolicyRegistry>(PolicyRegistryFactory.GetRegistry());
             //serviceCollection.AddScoped<IService, WaitRetryDelegateTimeoutService>();
             //serviceCollection.AddScoped<IService, PolicyHolderFromDIService>();
