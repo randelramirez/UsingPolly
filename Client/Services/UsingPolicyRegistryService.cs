@@ -13,18 +13,18 @@ namespace Client.Services
 {
     public class UsingPolicyRegistryService : IService
     {
-        private static HttpClient httpClient = new HttpClient();
+        private static HttpClient httpClient;
 
-        private readonly PolicyRegistry policyRegistry;
+        private readonly IPolicyRegistry<string> policyRegistry;
 
         public async Task Run()
         {
             await WaitAndRetry();
         }
 
-        public UsingPolicyRegistryService(PolicyRegistry policyRegistry)
+        public UsingPolicyRegistryService(IPolicyRegistry<string> policyRegistry, HttpClient httpClient)
         {
-
+            UsingPolicyRegistryService.httpClient = httpClient;
             httpClient.BaseAddress = new Uri("https://localhost:44354/");
             httpClient.Timeout = new TimeSpan(0, 0, 30);
             httpClient.DefaultRequestHeaders.Clear();
