@@ -13,15 +13,16 @@ namespace Client.Services
     {
         private static HttpClient httpClient = new HttpClient();
 
-        private readonly PolicyHolder policyHolder;
+        private readonly IPolicyHolder policyHolder;
 
         public async Task Run()
         {
             await WaitAndRetry();
         }
 
-        public PolicyHolderFromDIService(PolicyHolder policyHolder)
+        public PolicyHolderFromDIService(IPolicyHolder policyHolder, HttpClient client)
         {
+            httpClient = client;
             httpClient.BaseAddress = new Uri("https://localhost:44354/");
             httpClient.Timeout = new TimeSpan(0, 0, 30);
             httpClient.DefaultRequestHeaders.Clear();
