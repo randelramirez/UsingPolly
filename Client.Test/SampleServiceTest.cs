@@ -38,19 +38,19 @@ namespace Client.Test
             unauthorizedResponseHttpMessageHandlerMock.Protected()
                   .Setup<Task<HttpResponseMessage>>(
                   "SendAsync",
-                  ItExpr.IsAny<HttpRequestMessage>(),
-                  ItExpr.IsAny<CancellationToken>()
-               ).ReturnsAsync(new HttpResponseMessage()
-               {
-                   StatusCode = HttpStatusCode.Unauthorized
-               });
+                    ItExpr.IsAny<HttpRequestMessage>(),
+                    ItExpr.IsAny<CancellationToken>()
+                ).ReturnsAsync(new HttpResponseMessage()
+                {
+                    StatusCode = HttpStatusCode.Unauthorized
+                });
 
             IAsyncPolicy<HttpResponseMessage> mockPolicy = Policy.NoOpAsync<HttpResponseMessage>();
             var httpClient = new HttpClient(unauthorizedResponseHttpMessageHandlerMock.Object);
             var testableClass = new SampleService(mockPolicy, httpClient);
 
             // ACT, ASSERT(GetContactsAsStream())
-            Assert.ThrowsAsync<UnauthorizedApiAccessException>(() 
+            Assert.ThrowsAsync<UnauthorizedApiAccessException>(()
                 => testableClass.GetContactsAsStream());
         }
 
