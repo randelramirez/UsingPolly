@@ -19,7 +19,7 @@ namespace Client.Test
     public class UsingPolicyRegistryServiceTest
     {
         [Fact]
-        public async Task GetTest1()
+        public async Task CallInavlidApiEndpoint_ThrowsHttpRequestException_MessageMustHave404()
         {
             //Arrange 
             var data = new List<ContactViewModel>();
@@ -64,7 +64,7 @@ namespace Client.Test
         }
 
         [Fact]
-        public async Task GetTest()
+        public async Task CallValidApiEndpoint_DoesNotThrowException()
         {
             //Arrange 
             var data = new List<ContactViewModel>();
