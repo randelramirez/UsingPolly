@@ -24,7 +24,6 @@ namespace Client.Services
                    { AutomaticDecompression = System.Net.DecompressionMethods.GZip },
                    2));
 
-
         public HttpCustomMessageHandlerService(IHttpClientFactory httpClientFactory)
         {
             this.httpClientFactory = httpClientFactory;

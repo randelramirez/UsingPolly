@@ -22,7 +22,6 @@ namespace Client.Services
 
         public PolicyHolderFromDIService(PolicyHolder policyHolder)
         {
-
             httpClient.BaseAddress = new Uri("https://localhost:44354/");
             httpClient.Timeout = new TimeSpan(0, 0, 30);
             httpClient.DefaultRequestHeaders.Clear();

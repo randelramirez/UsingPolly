@@ -74,14 +74,12 @@ namespace Client.Services
 
             //var contacts = jsonSerializer.Deserialize<List<ContactViewModel>>(jsonTextReader);
 
-
             var content = await response.Content.ReadAsStringAsync();
             var contacts = new List<ContactViewModel>();
             if (response.Content.Headers.ContentType.MediaType == "application/json")
             {
                 contacts = JsonConvert.DeserializeObject<List<ContactViewModel>>(content);
             }
-
 
             // do something with the contacts   
             foreach (var contact in contacts)
@@ -119,7 +117,6 @@ namespace Client.Services
 
         private async Task<ContactViewModel> CreateContactUsingStreams()
         {
-
             var newContact = new Contact()
             {
                 Name = $"New Contact Stream {DateTimeOffset.Now.ToUnixTimeMilliseconds()}",
