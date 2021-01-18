@@ -48,9 +48,13 @@ namespace Client
             
             serviceCollection.AddSingleton<IPolicyHolder>(new PolicyHolder());
             serviceCollection.AddSingleton<PolicyRegistry>(PolicyRegistryFactory.GetRegistry());
+
+            // Services to run for testing Polly
             //serviceCollection.AddScoped<IService, WaitRetryDelegateTimeoutService>();
-            serviceCollection.AddScoped<IService, PolicyHolderFromDIService>();
+            //serviceCollection.AddScoped<IService, PolicyHolderFromDIService>();
             //serviceCollection.AddScoped<IService, UsingPolicyRegistryService>();
+            serviceCollection.AddScoped<IService, UsingContextService>();
+
         }
     }
 }
