@@ -29,7 +29,8 @@ namespace Client.Services
                  TimeSpan.FromSeconds(Math.Pow(2, retryAttempt) / 2), onRetry: (httpResponseMessage, retryCount, context) =>
                  {
                      Console.ForegroundColor = ConsoleColor.Blue;
-                     Console.WriteLine($"Request failed...will retry after {retryCount.Seconds} seconds of {context.PolicyKey} at {context.OperationKey},   CorrelationId: {context.CorrelationId}");
+                     Console.WriteLine($"Request failed...will retry after {retryCount.Seconds} seconds of " +
+                         $"{context.PolicyKey} at {context.OperationKey},   CorrelationId: {context.CorrelationId}");
                      Console.ForegroundColor = ConsoleColor.White;
 
                      if (context.ContainsKey("ClientAppName"))
