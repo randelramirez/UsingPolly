@@ -23,7 +23,7 @@ namespace Client.Services
         private readonly AsyncRetryPolicy<HttpResponseMessage> httpretryPolicyForHttpClienTimeout;
         private readonly AsyncRetryPolicy<HttpResponseMessage> httpWaitAndRetryWithDelegate;
         private readonly AsyncFallbackPolicy<HttpResponseMessage> httpFallbackPolicy;
-        
+
         public WaitRetryDelegateTimeoutService()
         {
             httpClient.BaseAddress = new Uri("https://localhost:44354/");
@@ -35,7 +35,7 @@ namespace Client.Services
 
             // this is not the same as setting timeout for HttpClient
             // if the request does not respond in the given time (ex. 5 seconds), TimeoutRejectedException is thrown
-            timeoutPolicy = Policy.TimeoutAsync<HttpResponseMessage>(5,TimeoutStrategy.Pessimistic);
+            timeoutPolicy = Policy.TimeoutAsync<HttpResponseMessage>(5, TimeoutStrategy.Pessimistic);
 
             httpretryPolicyForHttpClienTimeout = Policy.HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
               .Or<HttpRequestException>()
@@ -46,8 +46,12 @@ namespace Client.Services
                   TimeSpan.FromSeconds(Math.Pow(2, retryAttempt) / 2), onRetry: (httpResponseMessage, retryCount) =>
                   {
                       // Log
-                      Console.WriteLine(httpResponseMessage.Result.StatusCode);
-                        Console.WriteLine($"Retrying...");
+                      Console.ForegroundColor = ConsoleColor.Red;
+                      Console.WriteLine($"Request failed...{httpResponseMessage.Result.StatusCode}");
+
+                      Console.ForegroundColor = ConsoleColor.Yellow;
+                      Console.WriteLine($"Retrying...");
+                      Console.ForegroundColor = ConsoleColor.White;
                   });
 
             httpFallbackPolicy = Policy.HandleResult<HttpResponseMessage>(r => r.StatusCode == HttpStatusCode.NotFound)
@@ -63,7 +67,9 @@ namespace Client.Services
                     .Message.Contains("A connection attempt failed because the connected party did not properly respond after a period of time"))
                 {
                     // log something about the timeout  
+                    Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine("The request timedout, logging...");
+                    Console.ForegroundColor = ConsoleColor.White;
                 }
             }
         }
