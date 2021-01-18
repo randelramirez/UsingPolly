@@ -34,9 +34,6 @@ namespace WebClientForCachingDemo
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
-            _myRegistry = new PolicyRegistry();
-
             HttpClient httpClient = new HttpClient()
             {
                 BaseAddress = new Uri("https://localhost:44354/api/")
@@ -60,7 +57,6 @@ namespace WebClientForCachingDemo
             });
 
             services.AddSingleton<HttpClient>(httpClient);
-            services.AddSingleton(_myRegistry);
 
             services.AddControllers();
         }
