@@ -46,8 +46,8 @@ namespace Client.Services
                   TimeSpan.FromSeconds(Math.Pow(2, retryAttempt) / 2), onRetry: (httpResponseMessage, retryCount) =>
                   {
                       // Log
-                      Console.WriteLine(httpResponseMessage.Result.StatusCode);
-                        Console.WriteLine($"Retrying...");
+                    Console.WriteLine(httpResponseMessage.Result.StatusCode);
+                    Console.WriteLine($"Retrying...");
                   });
 
             httpFallbackPolicy = Policy.HandleResult<HttpResponseMessage>(r => r.StatusCode == HttpStatusCode.NotFound)
