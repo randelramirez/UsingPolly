@@ -22,7 +22,6 @@ namespace Client.Services
             httpClient.Timeout = new TimeSpan(0, 0, 30);
             httpClient.DefaultRequestHeaders.Clear();
 
-
             httpWaitAndRetryWithDelegate = Policy.HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
 
              .WaitAndRetryAsync(3, retryAttempt =>
