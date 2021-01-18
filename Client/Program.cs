@@ -46,6 +46,7 @@ namespace Client
             });
 
             // if 50% of the requests fails in the span of 60 secs, we disable all requests
+            // We can use the circuit breaker to allow the system to recover from possible error/exceptions
             AsyncCircuitBreakerPolicy<HttpResponseMessage> breakerPolicy = Policy.HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
                 .AdvancedCircuitBreakerAsync<HttpResponseMessage>(0.5, TimeSpan.FromSeconds(60), 7, TimeSpan.FromSeconds(15),
                     OnBreak, OnReset, OnHalfOpen);
