@@ -25,14 +25,6 @@ namespace WebClientForCachingDemo
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            HttpClient httpClient = new HttpClient()
-            {
-                BaseAddress = new Uri("https://localhost:44354/")
-            };
-
-            httpClient.DefaultRequestHeaders.Accept.Clear();
-            httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
             // Setup needed for memory cache
             services.AddMemoryCache();
             services.AddSingleton<Polly.Caching.IAsyncCacheProvider, MemoryCacheProvider>();
@@ -48,6 +40,14 @@ namespace WebClientForCachingDemo
                 return registry;
             });
 
+            // use HttpClientFactory in real apps
+            HttpClient httpClient = new HttpClient()
+            {
+                BaseAddress = new Uri("https://localhost:44354/")
+            };
+
+            httpClient.DefaultRequestHeaders.Accept.Clear();
+            httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             services.AddSingleton<HttpClient>(httpClient);
 
             services.AddControllers();
