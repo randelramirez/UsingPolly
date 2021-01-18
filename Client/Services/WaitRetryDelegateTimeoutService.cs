@@ -63,7 +63,9 @@ namespace Client.Services
                     .Message.Contains("A connection attempt failed because the connected party did not properly respond after a period of time"))
                 {
                     // log something about the timeout  
+                    Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine("The request timedout, logging...");
+                    Console.ForegroundColor = ConsoleColor.White;
                 }
             }
         }
