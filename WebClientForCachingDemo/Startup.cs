@@ -27,7 +27,7 @@ namespace WebClientForCachingDemo
         {
             HttpClient httpClient = new HttpClient()
             {
-                BaseAddress = new Uri("https://localhost:44354/api/")
+                BaseAddress = new Uri("https://localhost:44354/")
             };
 
             httpClient.DefaultRequestHeaders.Accept.Clear();
