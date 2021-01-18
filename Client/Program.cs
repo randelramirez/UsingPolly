@@ -54,7 +54,6 @@ namespace Client
             //serviceCollection.AddScoped<IService, PolicyHolderFromDIService>();
             //serviceCollection.AddScoped<IService, UsingPolicyRegistryService>();
             serviceCollection.AddScoped<IService, UsingContextService>();
-
         }
     }
 }
