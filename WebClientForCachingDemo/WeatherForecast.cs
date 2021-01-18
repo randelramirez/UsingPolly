@@ -1,6 +1,6 @@
 using System;
 
-namespace WebClient
+namespace WebClientForCachingDemo
 {
     public class WeatherForecast
     {
