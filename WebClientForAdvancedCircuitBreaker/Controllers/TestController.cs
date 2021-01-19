@@ -51,9 +51,9 @@ namespace WebClientForAdvancedCircuitBreaker.Controllers
 
             if (this.breakerPolicy.CircuitState == CircuitState.Open)
             {
-                //return StatusCode(500);
+                // LOG 
                 //throw new BrokenCircuitException();
-                return StatusCode(StatusCodes.Status503ServiceUnavailable);
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, "Service unavailable, circuit breaker is open");
             }
 
             var response = await Policy.WrapAsync(httpWaitAndRetryPolicy, this.breakerPolicy)
