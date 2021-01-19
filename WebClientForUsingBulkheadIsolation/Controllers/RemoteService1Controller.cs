@@ -20,6 +20,7 @@ namespace WebClientForUsingBulkheadIsolation.Controllers
             this.bulkheadIsolationPolicy = bulkheadIsolationPolicy;
         }
 
+        // To test the Bulkhead isolation, open this Action in multiple tabs(at least 7 parallel requests to see the error)
         public async Task<IActionResult> Get()
         {
             LogBulkheadInfo();
