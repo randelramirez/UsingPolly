@@ -1,4 +1,5 @@
 ﻿using Core.ViewModels;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Polly;
@@ -43,9 +44,20 @@ namespace WebClientForAdvancedCircuitBreaker.Controllers
 
         public async Task<ActionResult<IEnumerable<ContactViewModel>>> Get()
         {
-            var response = await httpWaitAndRetryPolicy.ExecuteAsync(
-                 () => this.breakerPolicy.ExecuteAsync(
-                     () => GetData(this.httpClient)));
+            //var response = await httpWaitAndRetryPolicy.ExecuteAsync(
+            //     () => this.breakerPolicy.ExecuteAsync(
+            //         () => GetData(this.httpClient)));
+
+
+            if (this.breakerPolicy.CircuitState == CircuitState.Open)
+            {
+                //return StatusCode(500);
+                //throw new BrokenCircuitException();
+                return StatusCode(StatusCodes.Status503ServiceUnavailable);
+            }
+
+            var response = await Policy.WrapAsync(httpWaitAndRetryPolicy, this.breakerPolicy)
+                .ExecuteAsync(async () => await GetData(this.httpClient));
 
             response.EnsureSuccessStatusCode();
             var content = await response.Content.ReadAsStringAsync();
@@ -68,6 +80,7 @@ namespace WebClientForAdvancedCircuitBreaker.Controllers
                 var number = generator.Next(1, 20);
 
                 // We creared a separare local method so we can breakpoint in this method to check for retries
+                // We created an invalid endpoint(contactsss) to force error and trigger the to open the circuit breaker
                 var endpoint = number % 2 == 0 ? "contacts" : "contactsss";
                 return await httpClient.GetAsync($"api/{endpoint} ");
             }
