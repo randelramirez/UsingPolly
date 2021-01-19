@@ -26,12 +26,13 @@ namespace WebClientForUsingBulkheadIsolation
         {
             // 2 request can be in the Execution slot at the same time
             // 4 is the max request that can be in the Queue slot
+            // basically, we can handle 6 parallel requests, 2 will be executed and 4 will be queued
             AsyncBulkheadPolicy<HttpResponseMessage> bulkheadIsolationPolicy = Policy
                 .BulkheadAsync<HttpResponseMessage>(2, 4, onBulkheadRejectedAsync: OnBulkheadRejectedAsync);
 
             HttpClient httpClient = new HttpClient()
             {
-                BaseAddress = new Uri("https://localhost:5001/api/") // this is the endpoint HttpClient will hit,
+                BaseAddress = new Uri("https://localhost:5001/api/")
             };
             httpClient.DefaultRequestHeaders.Accept.Clear();
             httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
