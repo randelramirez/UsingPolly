@@ -6,7 +6,6 @@ using Microsoft.Extensions.Hosting;
 using Polly;
 using Polly.CircuitBreaker;
 using System;
-using System.Diagnostics;
 using System.Net.Http;
 using System.Net.Http.Headers;
 
@@ -63,19 +62,25 @@ namespace WebClientForAdvancedCircuitBreaker
             });
         }
 
-        private  void OnHalfOpen()
+        private void OnHalfOpen()
         {
-            Debug.WriteLine("Connection half open");
+            Console.ForegroundColor = ConsoleColor.Blue;
+            Console.WriteLine("Connection half open");
+            Console.ResetColor();
         }
 
-        private  void OnReset(Context context)
+        private void OnReset(Context context)
         {
-            Debug.WriteLine("Connection reset");
+            Console.ForegroundColor = ConsoleColor.Blue;
+            Console.WriteLine("Connection reset");
+            Console.ResetColor();
         }
 
-        private  void OnBreak(DelegateResult<HttpResponseMessage> delegateResult, TimeSpan timeSpan, Context context)
+        private void OnBreak(DelegateResult<HttpResponseMessage> delegateResult, TimeSpan timeSpan, Context context)
         {
-            Debug.WriteLine($"Connection break: {delegateResult.Result}, {delegateResult.Result}");
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"Connection break: {delegateResult.Result}, {delegateResult.Result}");
+            Console.ResetColor();
         }
     }
 }
