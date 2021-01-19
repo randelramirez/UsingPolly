@@ -11,29 +11,26 @@ namespace WebClientForUsingBulkheadIsolation.Controllers
     [ApiController]
     public class RemoteService1Controller : ControllerBase
     {
-        private static int _requestCount = 0;
-        private readonly HttpClient _httpClient;
-        private readonly AsyncBulkheadPolicy<HttpResponseMessage> _bulkheadIsolationPolicy;
+        private readonly HttpClient httpClient;
+        private readonly AsyncBulkheadPolicy<HttpResponseMessage> bulkheadIsolationPolicy;
 
         public RemoteService1Controller(HttpClient httpClient, AsyncBulkheadPolicy<HttpResponseMessage> bulkheadIsolationPolicy)
         {
-            _httpClient = httpClient;
-            _bulkheadIsolationPolicy = bulkheadIsolationPolicy;
+            this.httpClient = httpClient;
+            this.bulkheadIsolationPolicy = bulkheadIsolationPolicy;
         }
 
         public async Task<IActionResult> Get()
         {
-            _requestCount++;
             LogBulkheadInfo();
-          
 
-            HttpResponseMessage response = await _bulkheadIsolationPolicy.ExecuteAsync(
-                     () => _httpClient.GetAsync("remoteservice2"));
+            HttpResponseMessage response = await bulkheadIsolationPolicy.ExecuteAsync(
+                     () => httpClient.GetAsync("remoteservice2"));
 
             if (response.IsSuccessStatusCode)
             {
-               var itemsInStock = JsonConvert.DeserializeObject<string>(await response.Content.ReadAsStringAsync());
-                return Ok(itemsInStock);
+                var content = JsonConvert.DeserializeObject<string>(await response.Content.ReadAsStringAsync());
+                return Ok(content);
             }
 
             return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
@@ -41,11 +38,10 @@ namespace WebClientForUsingBulkheadIsolation.Controllers
 
         private void LogBulkheadInfo()
         {
-            Console.WriteLine($"PollyDemo RequestCount {_requestCount}");
-            Console.WriteLine($"PollyDemo BulkheadAvailableCount " +
-                                               $"{_bulkheadIsolationPolicy.BulkheadAvailableCount}");
-            Console.WriteLine($"PollyDemo QueueAvailableCount " +
-                                               $"{_bulkheadIsolationPolicy.QueueAvailableCount}");
+            Console.WriteLine($"{this.GetType().Assembly.GetName()} BulkheadAvailableCount " +
+                                               $"{bulkheadIsolationPolicy.BulkheadAvailableCount}");
+            Console.WriteLine($"{this.GetType().Assembly.GetName()}QueueAvailableCount " +
+                                               $"{bulkheadIsolationPolicy.QueueAvailableCount}");
         }
     }
 }
