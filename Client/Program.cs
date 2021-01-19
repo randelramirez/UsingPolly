@@ -63,7 +63,8 @@ namespace Client
             //serviceCollection.AddScoped<IService, WaitRetryDelegateTimeoutService>();
             //serviceCollection.AddScoped<IService, PolicyHolderFromDIService>();
             //serviceCollection.AddScoped<IService, UsingPolicyRegistryService>();
-            serviceCollection.AddScoped<IService, UsingContextService>();
+            //serviceCollection.AddScoped<IService, UsingContextService>();
+            serviceCollection.AddScoped<IService, UsingAdvancedCircuitBreakerService>();
         }
 
         private static void OnHalfOpen()
