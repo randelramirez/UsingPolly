@@ -42,6 +42,7 @@ namespace WebClientForAdvancedCircuitBreaker.Controllers
                   });
         }
 
+        // To test Action, Ensure that the API project is running (try refreshing this action in the browser to simulate the flaky request)
         public async Task<ActionResult<IEnumerable<ContactViewModel>>> Get()
         {
             //var response = await httpWaitAndRetryPolicy.ExecuteAsync(
