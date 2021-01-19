@@ -4,8 +4,6 @@ using System.Threading.Tasks;
 using Client.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Polly;
-using Polly.CircuitBreaker;
 using Polly.Registry;
 
 namespace Client
@@ -45,14 +43,6 @@ namespace Client
                 builder.AddDebug();
             });
 
-            // if 50% of the requests fails in the span of 60 secs, we disable all requests
-            // We can use the circuit breaker to allow the system to recover from possible error/exceptions
-            AsyncCircuitBreakerPolicy<HttpResponseMessage> breakerPolicy = Policy.HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
-                .AdvancedCircuitBreakerAsync<HttpResponseMessage>(0.5, TimeSpan.FromSeconds(60), 7, TimeSpan.FromSeconds(15),
-                    OnBreak, OnReset, OnHalfOpen);
-            // we make it singleton so that all request that's using this policy will all use use the same state (Open/Close for to all request using this policy)
-            serviceCollection.AddSingleton<AsyncCircuitBreakerPolicy<HttpResponseMessage>>(breakerPolicy);
-
             // simple way to inject HttpClient, only suitable for demo application like this(for Production apps use HttpClientFactory)
             serviceCollection.AddSingleton<HttpClient>(new HttpClient());
             
@@ -64,21 +54,6 @@ namespace Client
             //serviceCollection.AddScoped<IService, PolicyHolderFromDIService>();
             //serviceCollection.AddScoped<IService, UsingPolicyRegistryService>();
             serviceCollection.AddScoped<IService, UsingContextService>();
-        }
-
-        private static void OnHalfOpen()
-        {
-            Console.WriteLine("Connection half open");
-        }
-
-        private static void OnReset(Context context)
-        {
-            Console.WriteLine("Connection reset");
-        }
-
-        private static void OnBreak(DelegateResult<HttpResponseMessage> delegateResult, TimeSpan timeSpan, Context context)
-        {
-            Console.WriteLine($"Connection break: {delegateResult.Result}, {delegateResult.Result}");
         }
     }
 }
