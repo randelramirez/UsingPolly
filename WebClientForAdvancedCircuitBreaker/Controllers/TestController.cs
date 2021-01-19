@@ -1,5 +1,4 @@
 ﻿using Core.ViewModels;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Polly;
@@ -8,7 +7,6 @@ using Polly.Retry;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
@@ -27,8 +25,6 @@ namespace WebClientForAdvancedCircuitBreaker.Controllers
         public TestController(HttpClient httpClient, AsyncCircuitBreakerPolicy<HttpResponseMessage> breakerPolicy)
         {
             this.httpClient = httpClient;
-          
-           
             this.breakerPolicy = breakerPolicy;
 
             this.httpWaitAndRetryPolicy = Policy.HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
