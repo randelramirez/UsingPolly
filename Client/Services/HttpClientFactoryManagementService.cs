@@ -28,37 +28,10 @@ namespace Client.Services
 
         public async Task Run()
         {
-            //await GetContactsWithHttpClientFromFactory();
             //await GetUsingNamedClient();
-
             //await PostUsingNamedClient();
             await GetWithTypedHttpClient();
         }
-
-        //public async Task GetContactsWithHttpClientFromFactory()
-        //{
-        //    var httpClient = httpClientFactory.CreateClient();
-
-        //    var request = new HttpRequestMessage(
-        //        HttpMethod.Get,
-        //        "https://localhost:44354/api/contacts");
-        //    request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-        //    using var response = await httpClient.SendAsync(request,
-        //        HttpCompletionOption.ResponseHeadersRead);
-        //    var stream = await response.Content.ReadAsStreamAsync();
-        //    response.EnsureSuccessStatusCode();
-
-        //    using var streamReader = new StreamReader(stream, new UTF8Encoding(), true, 1024, false);
-        //    using var jsonTextReader = new JsonTextReader(streamReader);
-        //    var jsonSerializer = new JsonSerializer();
-
-        //    var contacts = jsonSerializer.Deserialize<List<ContactViewModel>>(jsonTextReader);
-        //    foreach (var contact in contacts)
-        //    {
-        //        Console.WriteLine($"Name: {contact.Name}, Address: {contact.Address}");
-        //    }
-        //}
 
         // We expect the GET request to retry
         private async Task GetUsingNamedClient()

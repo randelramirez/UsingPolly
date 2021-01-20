@@ -218,7 +218,6 @@ namespace Client.Services
             Console.WriteLine("Reading response....");
             //var createdContact = jsonSerializer.Deserialize<ContactViewModel>(jsonTextReader);
 
-
             var content = await response.Content.ReadAsStringAsync();
             ContactViewModel createdContact = default;
             if (response.Content.Headers.ContentType.MediaType == "application/json")
