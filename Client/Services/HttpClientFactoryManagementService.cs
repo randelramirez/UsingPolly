@@ -87,6 +87,7 @@ namespace Client.Services
             return createdContact;
         }
 
+        // We expect a retry
         private async Task GetWithTypedHttpClient()
         {
             var contacts = await this.contactsClient.GetContacts();
