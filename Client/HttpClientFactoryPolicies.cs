@@ -59,11 +59,11 @@ namespace Client
                 return httpRequestMessage switch
                 {
                     _ when httpRequestMessage.Method == HttpMethod.Get => policyRegistry
-                        .Get<IAsyncPolicy<HttpResponseMessage>>("httpWaitAndpRetryPolicy"),
+                            .Get<IAsyncPolicy<HttpResponseMessage>>("httpWaitAndpRetryPolicy"),
                     _ when httpRequestMessage.Method == HttpMethod.Post => policyRegistry
-                        .Get<IAsyncPolicy<HttpResponseMessage>>("noOpPolicy"),
-                    //_ when httpRequestMessage.Method == HttpMethod.Get => policyRegistry
-                    //    .Get<IAsyncPolicy<HttpResponseMessage>>("httpWaitAndpRetryPolicy"),
+                            .Get<IAsyncPolicy<HttpResponseMessage>>("noOpPolicy"),
+                    _ when httpRequestMessage.RequestUri.LocalPath.Contains("DEV") => policyRegistry
+                            .Get<IAsyncPolicy<HttpResponseMessage>>("NoOpPolicy"),
                     _ => throw new NotImplementedException(),
                 };
             });
