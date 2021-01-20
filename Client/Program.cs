@@ -2,6 +2,7 @@
 using System.Net.Http;
 using System.Threading.Tasks;
 using Client.Services;
+using Client.TypedClients;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Polly.Registry;
@@ -35,25 +36,30 @@ namespace Client
             Console.ReadKey();
         }
 
-        private static void ConfigureServices(IServiceCollection serviceCollection)
+        private static void ConfigureServices(IServiceCollection services)
         {
-            serviceCollection.AddLogging(builder =>
+            services.AddLogging(builder =>
             {
                 builder.AddConsole();
                 builder.AddDebug();
             });
 
             // simple way to inject HttpClient, only suitable for demo application like this(for Production apps use HttpClientFactory)
-            serviceCollection.AddSingleton<HttpClient>(new HttpClient());
+            services.AddSingleton<HttpClient>(new HttpClient());
             
-            serviceCollection.AddSingleton<IPolicyHolder>(new PolicyHolder());
-            serviceCollection.AddSingleton<PolicyRegistry>(PolicyRegistryFactory.GetRegistry());
+            services.AddSingleton<IPolicyHolder>(new PolicyHolder());
+            services.AddSingleton<PolicyRegistry>(PolicyRegistryFactory.GetRegistry());
 
             // Services to run for testing Polly
-            //serviceCollection.AddScoped<IService, WaitRetryDelegateTimeoutService>();
-            //serviceCollection.AddScoped<IService, PolicyHolderFromDIService>();
-            //serviceCollection.AddScoped<IService, UsingPolicyRegistryService>();
-            serviceCollection.AddScoped<IService, UsingContextService>();
+            //services.AddScoped<IService, WaitRetryDelegateTimeoutService>();
+            //services.AddScoped<IService, PolicyHolderFromDIService>();
+            //services.AddScoped<IService, UsingPolicyRegistryService>();
+            //services.AddScoped<IService, UsingContextService>();
+
+           
+
+            services.AddHttpClientFactoryWithPolicies();
+            services.AddScoped<IService, HttpClientFactoryManagementService>();
         }
     }
 }
