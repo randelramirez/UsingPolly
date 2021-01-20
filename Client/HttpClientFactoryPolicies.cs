@@ -20,11 +20,6 @@ namespace Client
         {
             IPolicyRegistry<string> registry = services.AddPolicyRegistry();
 
-            IAsyncPolicy<HttpResponseMessage> httpRetryPolicy =
-                Policy.HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
-                    .RetryAsync(5);
-            registry.Add(nameof(httpRetryPolicy), httpRetryPolicy);
-
             IAsyncPolicy<HttpResponseMessage> httpWaitAndpRetryPolicy =
                 Policy.HandleResult<HttpResponseMessage>(r => !r.IsSuccessStatusCode)
                     .WaitAndRetryAsync(3, retryAttempt =>
@@ -55,16 +50,28 @@ namespace Client
 
                 client.BaseAddress = new Uri("https://localhost:44354/");
                 client.DefaultRequestHeaders.Add("Accept", "application/json");
-            }).AddPolicyHandlerFromRegistry(PolicySelector);
+            }).AddPolicyHandlerFromRegistry(policySelector);
 
             // using typed client
             // we can also try to add a client using an interface  services.AddHttpClient<IContactsService, ContactsService>
-            services.AddHttpClient<ContactsClient>().AddPolicyHandlerFromRegistry(PolicySelector);
+            // We are using lambda form for passing the policySelector
+            services.AddHttpClient<ContactsClient>().AddPolicyHandlerFromRegistry((policyRegistry, httpRequestMessage) => {
+                return httpRequestMessage switch
+                {
+                    _ when httpRequestMessage.Method == HttpMethod.Get => policyRegistry
+                        .Get<IAsyncPolicy<HttpResponseMessage>>("httpWaitAndpRetryPolicy"),
+                    _ when httpRequestMessage.Method == HttpMethod.Post => policyRegistry
+                        .Get<IAsyncPolicy<HttpResponseMessage>>("noOpPolicy"),
+                    //_ when httpRequestMessage.Method == HttpMethod.Get => policyRegistry
+                    //    .Get<IAsyncPolicy<HttpResponseMessage>>("httpWaitAndpRetryPolicy"),
+                    _ => throw new NotImplementedException(),
+                };
+            });
 
             return services;
         }
 
-        private static IAsyncPolicy<HttpResponseMessage> PolicySelector(IReadOnlyPolicyRegistry<string> policyRegistry,
+        private static IAsyncPolicy<HttpResponseMessage> policySelector(IReadOnlyPolicyRegistry<string> policyRegistry,
            HttpRequestMessage httpRequestMessage)
         {
             return httpRequestMessage switch
@@ -73,23 +80,10 @@ namespace Client
                     .Get<IAsyncPolicy<HttpResponseMessage>>("httpWaitAndpRetryPolicy"),
                 _ when httpRequestMessage.Method == HttpMethod.Post => policyRegistry
                     .Get<IAsyncPolicy<HttpResponseMessage>>("noOpPolicy"),
-                //_ when httpRequestMessage.Method == HttpMethod.Get => policyRegistry
-                //    .Get<IAsyncPolicy<HttpResponseMessage>>("httpWaitAndpRetryPolicy"),
+                _ when httpRequestMessage.RequestUri.LocalPath.Contains("DEV") => policyRegistry
+                    .Get<IAsyncPolicy<HttpResponseMessage>>("NoOpPolicy"),
                 _ => throw new NotImplementedException(),
             };
-
-            //if (httpRequestMessage.RequestUri.LocalPath.StartsWith("find"))
-            //{
-            //    return policyRegistry.Get<IAsyncPolicy<HttpResponseMessage>>("SimpleHttpRetryPolicy");
-            //}
-            //else if (httpRequestMessage.RequestUri.LocalPath.StartsWith("create"))
-            //{
-            //    return policyRegistry.Get<IAsyncPolicy<HttpResponseMessage>>("NoOpPolicy");
-            //}
-            //else
-            //{
-            //    return policyRegistry.Get<IAsyncPolicy<HttpResponseMessage>>("SimpleWaitAndRetryPolicy");
-            //}
         }
     }
 }
