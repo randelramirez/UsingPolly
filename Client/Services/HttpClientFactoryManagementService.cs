@@ -20,6 +20,7 @@ namespace Client.Services
         {
             this.httpClientFactory = httpClientFactory;
 
+            // Using a Typed client
             // The HttpClient instances injected by DI, can be disposed of safely, because the associated HttpMessageHandler is managed by the factory. 
             this.contactsClient = contactsClient;
         }
