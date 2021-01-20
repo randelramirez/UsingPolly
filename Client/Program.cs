@@ -53,7 +53,10 @@ namespace Client
             //services.AddScoped<IService, WaitRetryDelegateTimeoutService>();
             //services.AddScoped<IService, PolicyHolderFromDIService>();
             //services.AddScoped<IService, UsingPolicyRegistryService>();
-            services.AddScoped<IService, UsingContextService>();
+            //services.AddScoped<IService, UsingContextService>();
+
+            services.AddHttpClientFactoryWithPolicies();
+            services.AddScoped<IService, HttpClientFactoryManagementService>();
         }
     }
 }

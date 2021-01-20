@@ -8,7 +8,7 @@ namespace Client
 {
     public static class HttpClientFactoryPolicies
     {
-        public static IServiceCollection AddHttpClientWithPolicies(this IServiceCollection services)
+        public static IServiceCollection AddHttpClientFactoryWithPolicies(this IServiceCollection services)
         {
             services.ConfigurePolicies();
             services.ConfigureHttpClient();
@@ -50,7 +50,8 @@ namespace Client
         {
             services.AddHttpClient("WithPolicies", client =>
             {
-                client.BaseAddress = new Uri("http://localhost:57696/api/");
+
+                client.BaseAddress = new Uri("https://localhost:44354/");
                 client.DefaultRequestHeaders.Add("Accept", "application/json");
             }).AddPolicyHandlerFromRegistry(PolicySelector);
 

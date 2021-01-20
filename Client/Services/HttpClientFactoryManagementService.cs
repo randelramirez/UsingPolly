@@ -1,4 +1,5 @@
 ﻿using Client.TypedClients;
+using Core;
 using Core.ViewModels;
 using Newtonsoft.Json;
 using System;
@@ -16,13 +17,13 @@ namespace Client.Services
         private readonly IHttpClientFactory httpClientFactory;
         private readonly ContactsClient contactsClient;
 
-        public HttpClientFactoryManagementService(IHttpClientFactory httpClientFactory, ContactsClient contactsClient)
+        public HttpClientFactoryManagementService(IHttpClientFactory httpClientFactory)
         {
             this.httpClientFactory = httpClientFactory;
 
             // Using a Typed client
             // The HttpClient instances injected by DI, can be disposed of safely, because the associated HttpMessageHandler is managed by the factory. 
-            this.contactsClient = contactsClient;
+            //this.contactsClient = contactsClient;
         }
 
         public async Task Run()
@@ -57,6 +58,7 @@ namespace Client.Services
             }
         }
 
+        // We expect the GET request to retry
         private async Task GetContactsWithNamedHttpClientFromFactory()
         {
             var httpClient = httpClientFactory.CreateClient("WithPolicies");
@@ -81,6 +83,33 @@ namespace Client.Services
             {
                 Console.WriteLine($"Name: {contact.Name}, Address: {contact.Address}");
             }
+        }
+
+
+        public async Task<ContactViewModel> CreateContact()
+        {
+            var httpClient = httpClientFactory.CreateClient("WithPolicies");
+            var newContact = new Contact()
+            {
+                Name = $"New Name {DateTimeOffset.UtcNow}",
+                Address = $"New Address {DateTimeOffset.UtcNow}"
+            };
+
+            var serializedMovieToCreate = JsonConvert.SerializeObject(newContact);
+
+            var request = new HttpRequestMessage(HttpMethod.Post, "api/contactsss");
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            request.Content = new StringContent(serializedMovieToCreate);
+            request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            var response = await httpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+            var content = await response.Content.ReadAsStringAsync();
+            var createdContact = JsonConvert.DeserializeObject<ContactViewModel>(content);
+            Console.WriteLine($"Name: {createdContact.Name}, Address: {createdContact.Address}");
+            return createdContact;
         }
 
         private async Task GetContactsWithTypedHttpClient()
