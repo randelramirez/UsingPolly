@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Client.TypedClients;
+using Microsoft.Extensions.DependencyInjection;
 using Polly;
 using Polly.Registry;
 using System;
@@ -48,12 +49,17 @@ namespace Client
 
         private static IServiceCollection ConfigureHttpClient(this IServiceCollection services)
         {
+            // using named client
             services.AddHttpClient("WithPolicies", client =>
             {
 
                 client.BaseAddress = new Uri("https://localhost:44354/");
                 client.DefaultRequestHeaders.Add("Accept", "application/json");
             }).AddPolicyHandlerFromRegistry(PolicySelector);
+
+            // using typed client
+            // we can also try to add a client using an interface  services.AddHttpClient<IContactsService, ContactsService>
+            services.AddHttpClient<ContactsClient>().AddPolicyHandlerFromRegistry(PolicySelector);
 
             return services;
         }
@@ -66,7 +72,7 @@ namespace Client
                 _ when httpRequestMessage.Method == HttpMethod.Get => policyRegistry
                     .Get<IAsyncPolicy<HttpResponseMessage>>("httpWaitAndpRetryPolicy"),
                 _ when httpRequestMessage.Method == HttpMethod.Post => policyRegistry
-                    .Get<IAsyncPolicy<HttpResponseMessage>>("NoOpPolicy"),
+                    .Get<IAsyncPolicy<HttpResponseMessage>>("noOpPolicy"),
                 //_ when httpRequestMessage.Method == HttpMethod.Get => policyRegistry
                 //    .Get<IAsyncPolicy<HttpResponseMessage>>("httpWaitAndpRetryPolicy"),
                 _ => throw new NotImplementedException(),

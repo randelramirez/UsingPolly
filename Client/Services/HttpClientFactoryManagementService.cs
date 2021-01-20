@@ -17,49 +17,51 @@ namespace Client.Services
         private readonly IHttpClientFactory httpClientFactory;
         private readonly ContactsClient contactsClient;
 
-        public HttpClientFactoryManagementService(IHttpClientFactory httpClientFactory)
+        public HttpClientFactoryManagementService(IHttpClientFactory httpClientFactory, ContactsClient contactsClient)
         {
             this.httpClientFactory = httpClientFactory;
 
             // Using a Typed client
             // The HttpClient instances injected by DI, can be disposed of safely, because the associated HttpMessageHandler is managed by the factory. 
-            //this.contactsClient = contactsClient;
+            this.contactsClient = contactsClient;
         }
 
         public async Task Run()
         {
             //await GetContactsWithHttpClientFromFactory();
-            await GetContactsWithNamedHttpClientFromFactory();
-            //await GetContactsWithTypedHttpClient();
+            //await GetUsingNamedClient();
+
+            //await PostUsingNamedClient();
+            await GetWithTypedHttpClient();
         }
 
-        public async Task GetContactsWithHttpClientFromFactory()
-        {
-            var httpClient = httpClientFactory.CreateClient();
+        //public async Task GetContactsWithHttpClientFromFactory()
+        //{
+        //    var httpClient = httpClientFactory.CreateClient();
 
-            var request = new HttpRequestMessage(
-                HttpMethod.Get,
-                "https://localhost:44354/api/contacts");
-            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        //    var request = new HttpRequestMessage(
+        //        HttpMethod.Get,
+        //        "https://localhost:44354/api/contacts");
+        //    request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-            using var response = await httpClient.SendAsync(request,
-                HttpCompletionOption.ResponseHeadersRead);
-            var stream = await response.Content.ReadAsStreamAsync();
-            response.EnsureSuccessStatusCode();
+        //    using var response = await httpClient.SendAsync(request,
+        //        HttpCompletionOption.ResponseHeadersRead);
+        //    var stream = await response.Content.ReadAsStreamAsync();
+        //    response.EnsureSuccessStatusCode();
 
-            using var streamReader = new StreamReader(stream, new UTF8Encoding(), true, 1024, false);
-            using var jsonTextReader = new JsonTextReader(streamReader);
-            var jsonSerializer = new JsonSerializer();
-            
-            var contacts = jsonSerializer.Deserialize<List<ContactViewModel>>(jsonTextReader);
-            foreach (var contact in contacts)
-            {
-                Console.WriteLine($"Name: {contact.Name}, Address: {contact.Address}");
-            }
-        }
+        //    using var streamReader = new StreamReader(stream, new UTF8Encoding(), true, 1024, false);
+        //    using var jsonTextReader = new JsonTextReader(streamReader);
+        //    var jsonSerializer = new JsonSerializer();
+
+        //    var contacts = jsonSerializer.Deserialize<List<ContactViewModel>>(jsonTextReader);
+        //    foreach (var contact in contacts)
+        //    {
+        //        Console.WriteLine($"Name: {contact.Name}, Address: {contact.Address}");
+        //    }
+        //}
 
         // We expect the GET request to retry
-        private async Task GetContactsWithNamedHttpClientFromFactory()
+        private async Task GetUsingNamedClient()
         {
             var httpClient = httpClientFactory.CreateClient("WithPolicies");
 
@@ -85,8 +87,8 @@ namespace Client.Services
             }
         }
 
-
-        public async Task<ContactViewModel> CreateContact()
+        // The request should fail without retrying (We don't need to retry on a POST request)
+        public async Task<ContactViewModel> PostUsingNamedClient()
         {
             var httpClient = httpClientFactory.CreateClient("WithPolicies");
             var newContact = new Contact()
@@ -112,7 +114,7 @@ namespace Client.Services
             return createdContact;
         }
 
-        private async Task GetContactsWithTypedHttpClient()
+        private async Task GetWithTypedHttpClient()
         {
             var contacts = await this.contactsClient.GetContacts();
             foreach (var contact in contacts)

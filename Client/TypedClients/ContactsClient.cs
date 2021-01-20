@@ -32,9 +32,10 @@ namespace Client.TypedClients
 
         public async Task<IEnumerable<ContactViewModel>> GetContacts()
         {
+            // use an invalid endpoint to trigger retry policies
             var request = new HttpRequestMessage(
                 HttpMethod.Get,
-                "api/contacts");
+                "api/contactsss");
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             request.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));
 

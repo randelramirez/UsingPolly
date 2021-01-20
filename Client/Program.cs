@@ -2,6 +2,7 @@
 using System.Net.Http;
 using System.Threading.Tasks;
 using Client.Services;
+using Client.TypedClients;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Polly.Registry;
@@ -54,6 +55,8 @@ namespace Client
             //services.AddScoped<IService, PolicyHolderFromDIService>();
             //services.AddScoped<IService, UsingPolicyRegistryService>();
             //services.AddScoped<IService, UsingContextService>();
+
+           
 
             services.AddHttpClientFactoryWithPolicies();
             services.AddScoped<IService, HttpClientFactoryManagementService>();
