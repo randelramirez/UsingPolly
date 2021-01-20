@@ -28,8 +28,8 @@ namespace Client.Services
         public async Task Run()
         {
             //await GetContactsWithHttpClientFromFactory();
-            //await GetContactsWithNamedHttpClientFromFactory();
-            await GetContactsWithTypedHttpClient();
+            await GetContactsWithNamedHttpClientFromFactory();
+            //await GetContactsWithTypedHttpClient();
         }
 
         public async Task GetContactsWithHttpClientFromFactory()
@@ -59,11 +59,11 @@ namespace Client.Services
 
         private async Task GetContactsWithNamedHttpClientFromFactory()
         {
-            var httpClient = httpClientFactory.CreateClient("ContactsClient");
+            var httpClient = httpClientFactory.CreateClient("WithPolicies");
 
             var request = new HttpRequestMessage(
                 HttpMethod.Get,
-                "api/contacts");
+                "api/contactsss");
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             request.Headers.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));
 
